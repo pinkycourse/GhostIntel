@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Tương Tác: Toàn Cảnh AI Ngành Game 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices: 
+        1. Market Snapshot: Report Info -> Comparison of major AI companies -> Goal: Compare -> Viz: Interactive Bar Chart -> Interaction: Hover for details -> Justification: Bar charts are optimal for comparing discrete categories. Library: Chart.js (Canvas).
+        2. AI Tools by Department: Report Info -> Table 2 (AI tools per role) -> Goal: Organize & Filter -> Presentation: Filterable grid of cards -> Interaction: Click department buttons to filter cards; Click tool card to show popup with details; "Show More/Less" button for "All" category -> Justification: Transforms a static table into a highly usable, task-oriented tool with detailed info on demand and controlled display for large lists. Method: Vanilla JS.
+        3. Google Ecosystem: Report Info -> Google's various AI products -> Goal: Show relationships -> Presentation: Diagram-like structure -> Interaction: Click nodes to reveal descriptions -> Justification: A visual diagram is more intuitive for understanding interconnected systems than text. Method: HTML/CSS with JS toggles.
+        4. Key Considerations: Report Info -> Sections on Ethics, IP, ROI -> Goal: Inform -> Presentation: Accordion -> Interaction: Click to expand/collapse -> Justification: Organizes dense text neatly, saving screen space. Method: Vanilla JS.
+    -->
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #292524; /* stone-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease-in-out;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488;
+        }
+        .filter-btn {
+            transition: all 0.3s ease-in-out;
+        }
+        .filter-btn.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .card {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem; /* rounded-lg */
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            max-width: 90%;
+            width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease-in-out;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #a8a29e; /* stone-400 */
+        }
+        .modal-close-btn:hover {
+            color: #78716c; /* stone-600 */
+        }
+
+        /* Google Ecosystem Diagram Specific Styles */
+        .diagram-node {
+            background-color: #f5f5f4; /* stone-100 */
+            border: 1px solid #d6d3d1; /* stone-300 */
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            color: #44403c; /* stone-700 */
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .diagram-node:hover {
+            background-color: #e7e5e4; /* stone-200 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .diagram-line {
+            background-color: #d6d3d1; /* stone-300 */
+            position: absolute;
+        }
+        .line-vertical {
+            width: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .line-horizontal {
+            height: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Thêm style cho chatbot cố định */
+        .floating-chat {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .chat-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0d9488;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .chat-button:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: none;
+            flex-direction: column;
+        }
+
+        .chat-window.active {
+            display: flex;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            background: #0d9488;
+            color: white;
+            border-radius: 12px 12px 0 0;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Style cho phần hệ sinh thái Google */
+        .ecosystem-container {
+            background: linear-gradient(to bottom right, #1a1a1a, #2d2d2d);
+            border-radius: 16px;
+            padding: 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ecosystem-core {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .ecosystem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .ecosystem-category {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .ecosystem-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .ecosystem-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .connecting-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, #f59e0b, transparent);
+            transform: translate(-50%, -50%);
+        }
+
+        @media (max-width: 768px) {
+            .ecosystem-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-teal-600">AI Insight</span>
+                    <span class="ml-2 text-sm text-gray-500 hidden sm:block">bởi Pinky</span>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#overview" class="nav-link font-medium text-gray-600 px-2 py-1">Tổng Quan</a>
+                    <a href="#explore" class="nav-link font-medium text-gray-600 px-2 py-1">Khám Phá AI</a>
+                    <a href="#giants" class="nav-link font-medium text-gray-600 px-2 py-1">So Sánh</a>
+                    <a href="#google" class="nav-link font-medium text-gray-600 px-2 py-1">Hệ Sinh Thái Google</a>
+                    <a href="#issues" class="nav-link font-medium text-gray-600 px-2 py-1">Lưu Ý</a>
+                </nav>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-teal-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#overview" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Tổng Quan</a>
+            <a href="#explore" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Khám Phá AI</a>
+            <a href="#giants" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">So Sánh</a>
+            <a href="#google" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Hệ Sinh Thái Google</a>
+            <a href="#issues" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Lưu Ý</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <h1 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-900">Toàn Cảnh AI Ngành Game & Ứng Dụng</h1>
+            <p class="text-center text-lg text-gray-600 mb-8">Báo cáo tương tác cập nhật đến tháng 5, 2025</p>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm mb-12">
+                <h2 class="text-2xl font-semibold text-teal-700 mb-4">Các Xu Hướng AI Then Chốt</h2>
+                <p class="text-gray-600 mb-6">Thị trường AI đang được định hình bởi những xu hướng đột phá, thay đổi cách chúng ta xây dựng và vận hành sản phẩm. Từ các trợ lý ảo tự trị đến khả năng xử lý đa phương tiện, AI đang mở ra những chân trời mới.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <div class="text-3xl mb-2">🤖</div>
+                        <h3 class="font-semibold text-stone-800">Sự trỗi dậy của AI Agent</h3>
+                        <p class="text-sm text-gray-600">Các agent tự trị, chủ động thực thi nhiệm vụ phức tạp, từ coding đến quản lý vận hành.</p>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <div class="text-3xl mb-2">🎬</div>
+                        <h3 class="font-semibold text-stone-800">Đa phương thức (Multimodality)</h3>
+                        <p class="text-sm text-gray-600">Khả năng xử lý & tạo nội dung (văn bản, ảnh, âm thanh, video) trở thành tiêu chuẩn mới.</p>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <div class="text-3xl mb-2">📖</div>
+                        <h3 class="font-semibold text-stone-800">Cửa sổ Ngữ cảnh Lớn</h3>
+                        <p class="text-sm text-gray-600">Mô hình có thể "nhớ" và phân tích lượng thông tin khổng lồ, như toàn bộ codebase của game.</p>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <div class="text-3xl mb-2">🌍</div>
+                        <h3 class="font-semibold text-stone-800">Mã Nguồn Mở Phát Triển</h3>
+                        <p class="text-sm text-gray-600">Các mô hình mở mạnh mẽ (Llama, Mistral) thúc đẩy đổi mới và khả năng tùy biến sâu.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-semibold text-teal-700 mb-4 text-center">Bản Đồ Cạnh Tranh Thị Trường AI</h2>
+                <p class="text-gray-600 mb-8 text-center max-w-3xl mx-auto">Cuộc đua AI ngày càng "đông đúc" với sự tham gia của nhiều người chơi lớn. Biểu đồ dưới đây thể hiện vị thế tương đối của các nhà cung cấp mô hình nền tảng hàng đầu, dựa trên tổng hợp các yếu tố về năng lực công nghệ, hệ sinh thái và tầm ảnh hưởng thị trường.</p>
+                <div class="chart-container">
+                    <canvas id="marketShareChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="explore" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-stone-900">Khám Phá AI Theo Lĩnh Vực</h2>
+            <p class="text-center text-lg text-gray-600 mb-8">Tìm kiếm các công cụ AI phù hợp nhất cho bộ phận của bạn. Chọn một lĩnh vực để xem các giải pháp được đề xuất.</p>
+            
+            <div id="filter-buttons" class="flex flex-wrap justify-center gap-2 md:gap-3 mb-8">
+            </div>
+
+            <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            </div>
+            <div id="show-more-container" class="text-center mt-8 hidden">
+                <button id="show-more-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-full shadow-md hover:bg-teal-700 transition duration-300">
+                    Hiển thị thêm
+                </button>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm mt-12">
+                <h3 class="text-2xl font-semibold text-teal-700 mb-4 text-center">✨ Tạo Ý Tưởng AI Tool Mới</h3>
+                <p class="text-gray-600 mb-6 text-center max-w-2xl mx-auto">Hãy để Gemini giúp bạn khám phá những ý tưởng công cụ AI tiềm năng cho ngành game!</p>
+                <div class="max-w-xl mx-auto space-y-4">
+                    <div>
+                        <label for="ai-idea-department" class="block text-sm font-medium text-gray-700 mb-2">Chọn lĩnh vực (tùy chọn):</label>
+                        <select id="ai-idea-department" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md">
+                            <option value="">-- Chọn lĩnh vực --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ai-idea-prompt" class="block text-sm font-medium text-gray-700 mb-2">Mô tả ý tưởng (tùy chọn):</label>
+                        <textarea id="ai-idea-prompt" rows="3" class="shadow-sm focus:ring-teal-500 focus:border-teal-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2" placeholder="Ví dụ: AI giúp tạo hiệu ứng vật lý chân thực cho game"></textarea>
+                    </div>
+                    <button id="generate-ai-idea-btn" class="w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-full shadow-md hover:bg-teal-700 transition duration-300 flex items-center justify-center">
+                        <span id="generate-ai-idea-text">Tạo Ý Tưởng ✨</span>
+                        <svg id="generate-ai-idea-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                    <div id="ai-idea-output" class="bg-stone-50 p-4 rounded-lg border border-stone-200 hidden">
+                        <h4 class="font-semibold text-stone-800 text-lg mb-2">Ý tưởng của bạn:</h4>
+                        <p class="text-sm text-gray-700 mb-1"><strong class="text-teal-700">Tên công cụ:</strong> <span id="generated-tool-name"></span></p>
+                        <p class="text-sm text-gray-700 mb-1"><strong class="text-teal-700">Mô tả:</strong> <span id="generated-tool-description"></span></p>
+                        <p class="text-sm text-gray-700"><strong class="text-teal-700">Lĩnh vực đề xuất:</strong> <span id="generated-tool-category"></span></p>
+                    </div>
+                    <div id="ai-idea-error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative hidden" role="alert">
+                        <strong class="font-bold">Lỗi!</strong>
+                        <span class="block sm:inline" id="ai-idea-error-message"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm mt-12">
+                <h3 class="text-2xl font-semibold text-teal-700 mb-4 text-center">💬 Chat với Gemini</h3>
+                <p class="text-gray-600 mb-6 text-center max-w-2xl mx-auto">Hãy để Gemini giúp bạn giải đáp mọi thắc mắc về AI trong ngành game!</p>
+                <div class="max-w-2xl mx-auto">
+                    <div id="chat-messages" class="mb-4 h-96 overflow-y-auto bg-stone-50 rounded-lg p-4 space-y-4">
+                        <!-- Messages will be added here -->
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="chat-input" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Nhập câu hỏi của bạn...">
+                        <button id="send-message" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 transition duration-300 flex items-center">
+                            <span id="send-text">Gửi</span>
+                            <svg id="send-spinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm mt-12">
+                <h3 class="text-2xl font-semibold text-teal-700 mb-4 text-center">🌐 AI Mã Nguồn Mở</h3>
+                <p class="text-gray-600 mb-6 text-center max-w-2xl mx-auto">Khám phá các mô hình AI mã nguồn mở hàng đầu từ cộng đồng Hugging Face.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <h4 class="font-semibold text-stone-800 mb-2">🤖 Mistral-7B</h4>
+                        <p class="text-sm text-gray-600 mb-2">Mô hình ngôn ngữ lớn mã nguồn mở, hiệu suất cao, kích thước nhỏ gọn.</p>
+                        <a href="https://huggingface.co/mistralai/Mistral-7B-v0.1" target="_blank" class="text-teal-600 hover:text-teal-700 text-sm">Xem trên Hugging Face →</a>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <h4 class="font-semibold text-stone-800 mb-2">🎨 Stable Diffusion XL</h4>
+                        <p class="text-sm text-gray-600 mb-2">Mô hình tạo hình ảnh tiên tiến với chất lượng và độ chi tiết cao.</p>
+                        <a href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0" target="_blank" class="text-teal-600 hover:text-teal-700 text-sm">Xem trên Hugging Face →</a>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <h4 class="font-semibold text-stone-800 mb-2">🎥 Text-to-Video</h4>
+                        <p class="text-sm text-gray-600 mb-2">Mô hình tạo video từ văn bản với khả năng tạo chuyển động mượt mà.</p>
+                        <a href="https://huggingface.co/damo-vilab/text-to-video-ms-1.7b" target="_blank" class="text-teal-600 hover:text-teal-700 text-sm">Xem trên Hugging Face →</a>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <h4 class="font-semibold text-stone-800 mb-2">🗣️ XTTS v2</h4>
+                        <p class="text-sm text-gray-600 mb-2">Mô hình chuyển văn bản thành giọng nói đa ngôn ngữ chất lượng cao.</p>
+                        <a href="https://huggingface.co/spaces/coqui/xtts" target="_blank" class="text-teal-600 hover:text-teal-700 text-sm">Xem trên Hugging Face →</a>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <h4 class="font-semibold text-stone-800 mb-2">🧠 LLaMA 2</h4>
+                        <p class="text-sm text-gray-600 mb-2">Mô hình ngôn ngữ lớn từ Meta, cho phép sử dụng thương mại.</p>
+                        <a href="https://huggingface.co/meta-llama/Llama-2-7b" target="_blank" class="text-teal-600 hover:text-teal-700 text-sm">Xem trên Hugging Face →</a>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                        <h4 class="font-semibold text-stone-800 mb-2">🎮 Point-E</h4>
+                        <p class="text-sm text-gray-600 mb-2">Mô hình tạo mô hình 3D từ văn bản của OpenAI.</p>
+                        <a href="https://huggingface.co/openai/point-e" target="_blank" class="text-teal-600 hover:text-teal-700 text-sm">Xem trên Hugging Face →</a>
+                    </div>
+                </div>
+                <div class="text-center mt-6">
+                    <a href="https://huggingface.co/models" target="_blank" class="inline-block px-6 py-3 bg-stone-800 text-white font-semibold rounded-full shadow-md hover:bg-stone-700 transition duration-300">
+                        Khám phá thêm trên Hugging Face
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="giants" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-stone-900">So Sánh Các "Ông Lớn"</h2>
+            <p class="text-center text-lg text-gray-600 mb-8">Một cái nhìn trực diện về các mô hình nền tảng hàng đầu từ những nhà phát triển tiên phong.</p>
+            <div id="giants-comparison" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8">
+            </div>
+        </section>
+
+        <section id="google" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-stone-900">Hệ Sinh Thái AI của Google</h2>
+            <p class="text-center text-lg text-gray-600 mb-8">Google đang xây dựng một hệ sinh thái AI tích hợp chặt chẽ, từ mô hình nền tảng Gemini đến các công cụ chuyên biệt cho sáng tạo và phát triển.</p>
+            <div class="ecosystem-container">
+                <div class="ecosystem-core">
+                    <a href="https://deepmind.google/technologies/gemini/" target="_blank" class="block hover:opacity-90 transition-opacity">
+                        <h3 class="text-2xl font-bold">GEMINI 2.5</h3>
+                        <p class="text-sm mt-2">(Pro, Flash, Deep Think)</p>
+                    </a>
+                </div>
+                
+                <div class="ecosystem-grid">
+                    <div class="ecosystem-category">
+                        <h4 class="text-xl font-bold text-teal-400">Sáng Tạo Nội Dung</h4>
+                        <a href="https://cloud.google.com/vertex-ai/docs/generative-ai/image/overview" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">🎬</span>
+                            <span>Veo 3 & Flow</span>
+                        </a>
+                        <a href="https://cloud.google.com/vertex-ai/docs/generative-ai/image/overview" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">🖼️</span>
+                            <span>Imagen 4 & Whisk</span>
+                        </a>
+                        <a href="https://cloud.google.com/vertex-ai/docs/generative-ai/multimodal/overview" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">🎨</span>
+                            <span>Stitch</span>
+                        </a>
+                    </div>
+
+                    <div class="ecosystem-category">
+                        <h4 class="text-xl font-bold text-blue-400">Phát Triển & Vận Hành</h4>
+                        <a href="https://cloud.google.com/vertex-ai/docs/generative-ai/code/code-generation-overview" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">👨‍💻</span>
+                            <span>Jules</span>
+                        </a>
+                        <a href="https://cloud.google.com/vertex-ai/docs/generative-ai/learn/overview" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">🧠</span>
+                            <span>AlphaEvolve</span>
+                        </a>
+                        <a href="https://cloud.google.com/vertex-ai/docs/generative-ai/learn/overview" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">🌐</span>
+                            <span>Project Mariner</span>
+                        </a>
+                    </div>
+
+                    <div class="ecosystem-category">
+                        <h4 class="text-xl font-bold text-purple-400">Nền Tảng & Mở Rộng</h4>
+                        <a href="https://cloud.google.com/vertex-ai" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">☁️</span>
+                            <span>Vertex AI</span>
+                        </a>
+                        <a href="https://blog.google/technology/ai/gemma-open-model/" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">🌍</span>
+                            <span>Gemma (Open Source)</span>
+                        </a>
+                        <a href="https://cloud.google.com/vertex-ai/docs/start/introduction-unified-platform" target="_blank" class="ecosystem-item">
+                            <span class="text-2xl">🚀</span>
+                            <span>Project Astra</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Chatbot -->
+            <div class="floating-chat">
+                <div class="chat-button" id="chat-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                </div>
+                <div class="chat-window" id="chat-window">
+                    <div class="chat-header">
+                        Chat với AI Assistant
+                    </div>
+                    <div class="chat-messages" id="floating-chat-messages">
+                        <!-- Messages will appear here -->
+                    </div>
+                    <div class="chat-input-container">
+                        <div class="flex space-x-2">
+                            <input type="text" id="floating-chat-input" class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Nhập tin nhắn...">
+                            <button id="floating-chat-send" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition duration-300">
+                                Gửi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="issues" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-stone-900">Các Vấn Đề Then Chốt</h2>
+            <p class="text-center text-lg text-gray-600 mb-8 max-w-3xl mx-auto">Việc áp dụng AI không chỉ là về công nghệ. Các công ty cần chủ động giải quyết các thách thức về đạo đức, pháp lý, nhân sự và tài chính để thành công bền vững.</p>
+            <div id="accordion" class="space-y-4 max-w-4xl mx-auto">
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-stone-800 text-stone-300 mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm">
+            <p>Báo cáo tương tác được tạo bởi Pinky dựa trên nghiên cứu đến tháng 5, 2025.</p>
+            <p>Tất cả dữ liệu được tổng hợp từ các tài liệu đã cung cấp.</p>
+        </div>
+    </footer>
+
+    <div id="tool-detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="modal-tool-name" class="text-2xl font-bold text-teal-700 mb-4"></h3>
+            <p id="modal-tool-description" class="text-gray-700 leading-relaxed mb-4"></p>
+            <a id="modal-tool-website" href="#" target="_blank" class="hidden inline-block px-4 py-2 bg-teal-600 text-white font-semibold rounded-md hover:bg-teal-700 transition duration-300">Truy cập trang web</a>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const aiData = {
+        departments: [
+            { id: 'all', name: 'Tất Cả', icon: '✨' },
+            { id: 'general', name: 'Tổng hợp / Nghiên cứu', icon: '💡' },
+            { id: '2d', name: '2D Artist / UI / Illustration', icon: '🎨' },
+            { id: '3d', name: '3D Artist / Modeling / Asset Generation', icon: '🧱' },
+            { id: 'anim', name: 'Animator / Rigging / Mocap', icon: '🎞️' },
+            { id: 'gd', name: 'Level Designer / Environment', icon: '🗺️' },
+            { id: 'narrative', name: 'Narrative / Quest / NPC AI', icon: '🎭' },
+            { id: 'qa', name: 'QA / Game Tester', icon: '🧪' },
+            { id: 'dev', name: 'Dev / Backend / Tools Dev', icon: '👨‍💻' },
+            { id: 'ai_engineer', name: 'AI Engineer / LLM Dev / Agent Dev', icon: '🧠' },
+            { id: 'data', name: 'Data Analyst / Game Economy', icon: '📊' },
+            { id: 'marketing', name: 'Marketing / UA / Growth', icon: '📣' },
+            { id: 'video_editor', name: 'Video Editor / Ads / Trailer', icon: '🎬' },
+            { id: 'cskh', name: 'Community / CS / LiveOps', icon: '💬' },
+            { id: 'hr', name: 'HR / Onboarding / Training', icon: '🧑‍💼' },
+            { id: 'localization', name: 'Bản địa hóa', icon: '🌐' }
+        ],
+        tools: [
+            { name: '3D AI Studio', category: '3d', desc: 'Tạo mô hình 3D từ hình ảnh và văn bản.', website: '' },
+            { name: '3D-Science', category: '3d', desc: 'Mô hình 3D y tế và khoa học.', website: '' },
+            { name: '3DFY.AI', category: '3d', desc: 'Tạo mô hình 3D từ văn bản.', website: 'https://www.3dfy.ai/' },
+            { name: 'AI Dungeon', category: 'narrative', desc: 'Trò chơi nhập vai dựa trên văn bản.', website: 'https://aidungeon.com/' },
+            { name: 'AI-driven LiveOps script', category: 'cskh', desc: 'Kịch bản LiveOps tự động bằng AI.', website: '' },
+            { name: 'Airtable AI', category: 'data', desc: 'Quản lý dữ liệu với AI.', website: 'https://www.airtable.com/ai' },
+            { name: 'Aitubo', category: '2d', desc: 'Tạo hình ảnh từ mô tả văn bản.', website: 'https://aitubo.ai/' },
+            { name: 'Alpha3D', category: '3d', desc: 'Tạo mô hình 3D từ hình ảnh.', website: 'https://alpha3d.io/' },
+            { name: 'AlphaEvolve', category: 'dev', desc: 'Agent AI tiên tiến để khám phá và tối ưu hóa các thuật toán phức tạp, có khả năng phát triển và cải tiến toàn bộ codebase.', website: 'https://deepmind.google/discover/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/' },
+            { name: 'Amplitude AI', category: 'data', desc: 'Phân tích hành vi người dùng.', website: 'https://amplitude.com/behavioral-analytics/ai' },
+            { name: 'Anima AI', category: 'anim', desc: 'Tạo hoạt ảnh cho nhân vật 3D.', website: 'https://anima.ai/' },
+            { name: 'Animate 3D by DeepMotion', category: 'anim', desc: 'Tạo hoạt ảnh 3D từ video.', website: 'https://www.deepmotion.com/animate-3d' },
+            { name: 'AnimateDiff', category: 'anim', desc: 'Tạo hoạt ảnh từ hình ảnh.', website: 'https://github.com/guoyww/AnimateDiff' },
+            { name: 'AnyBPM', category: 'general', desc: 'Tạo quy trình hoặc form AI tùy chỉnh', website: '' },
+            { name: 'Artbreeder', category: '2d', desc: 'Kết hợp và chỉnh sửa hình ảnh để tạo ra tác phẩm mới.', website: 'https://www.artbreeder.com/' },
+            { name: 'AssetFactory', category: '3d', desc: 'Tạo tài sản 3D cho game.', website: '' },
+            { name: 'AutoGen', category: 'ai_engineer', desc: 'Tạo agent AI tự động.', website: 'https://microsoft.github.io/autogen/' },
+            { name: 'Balancer Sim', category: 'monetization', desc: 'Công cụ mô phỏng cân bằng game.', website: '' },
+            { name: 'BentoML + LLM', category: 'dev', desc: 'Framework để triển khai LLM.', website: 'https://docs.bentoml.com/en/latest/guides/llm.html' },
+            { name: 'Bing Copilot', category: 'general', desc: 'Trợ lý AI tích hợp trong Bing và Edge.', website: 'https://www.microsoft.com/en-us/bing/chat/copilot' },
+            { name: 'BlueWillow', category: '2d', desc: 'Tạo hình ảnh từ văn bản với phong cách nghệ thuật.', website: 'https://www.bluewillow.ai/' },
+            { name: 'Boomy', category: 'anim', desc: 'Tạo nhạc và video âm nhạc.', website: 'https://boomy.com/' },
+            { name: 'Brand24', category: 'cskh', desc: 'Theo dõi cảm xúc và các cuộc thảo luận của cộng đồng về game.', website: 'https://brand24.com/' },
+            { name: 'BrandBastion AI', category: 'marketing', desc: 'Ad design + kiểm duyệt nội dung ads.', website: 'https://www.brandbastion.com/' },
+            { name: 'BRIA.ai', category: '3d', desc: 'Tối ưu hóa mô hình 3D.', website: 'https://bria.ai/' },
+            { name: 'Bugasura AI', category: 'qa', desc: 'Quản lý lỗi với AI.', website: 'https://bugasura.io/' },
+            { name: 'Canva AI', category: '2d', desc: 'Tạo thiết kế đồ họa từ văn bản.', website: 'https://www.canva.com/ai-features/' },
+            { name: 'CapCut AI', category: 'video_editor', desc: 'Chỉnh sửa video và âm thanh với AI.', website: 'https://www.capcut.com/ai-tools/' },
+            { name: 'Cascadeur', category: 'anim', desc: 'Tạo hoạt ảnh vật lý cho nhân vật.', website: 'https://cascadeur.com/' },
+            { name: 'CG-Trader', category: '3d', desc: 'Thị trường mô hình 3D.', website: 'https://www.cgtrader.com/' },
+            { name: 'ChatGPT', category: 'narrative', desc: 'Trợ lý AI đa năng.', website: 'https://chat.openai.com/' },
+            { name: 'Charisma', category: 'narrative', desc: 'Tạo câu chuyện tương tác.', website: 'https://charisma.ai/' },
+            { name: 'Chatwoot + LangChain', category: 'cskh', desc: 'Nền tảng hỗ trợ khách hàng mã nguồn mở với AI.', website: 'https://www.chatwoot.com/' },
+            { name: 'CityEngine AI', category: 'gd', desc: 'Tạo thành phố 3D.', website: 'https://www.esri.com/en-us/arcgis/products/arcgis-cityengine/overview' },
+            { name: 'Claude', category: 'general', desc: 'LLM tổng quát, phân tích, viết nội dung', website: 'https://www.anthropic.com/product' },
+            { name: 'Claude (Anthropic)', category: 'narrative', desc: 'Mạnh về viết lách sáng tạo, xây dựng cốt truyện và lời thoại.', website: 'https://www.anthropic.com/product' },
+            { name: 'Claude Haiku', category: 'general', desc: 'LLM tổng quát, phân tích, viết nội dung', website: 'https://www.anthropic.com/news/claude-3-family' },
+            { name: 'CodiumAI', category: 'qa', desc: 'Gợi ý kiểm thử cho mã.', website: 'https://www.codium.ai/' },
+            { name: 'Cognosys', category: 'ai_engineer', desc: 'Tối ưu hóa mô hình ngôn ngữ lớn.', website: 'https://cognosys.ai/' },
+            { name: 'Contentcore XYZ', category: '3d', desc: 'Kết hợp tạo mô hình 3D với công cụ chỉnh sửa thủ công.', website: '' },
+            { name: 'Convai', category: 'narrative', desc: 'Tạo nhân vật AI tương tác.', website: 'https://www.convai.com/' },
+            { name: 'Copy.ai', category: 'marketing', desc: 'Viết ad copy, devlog.', website: 'https://www.copy.ai/' },
+            { name: 'Cody', category: 'dev', desc: 'Trợ lý mã hóa AI.', website: 'https://cody.ai/' },
+            { name: 'Craiyon', category: '2d', desc: 'Tạo hình ảnh từ văn bản với phong cách độc đáo.', website: 'https://www.craiyon.com/' },
+            { name: 'Cursor', category: 'general', desc: 'IDE AI-first', website: 'https://cursor.sh/' },
+            { name: 'Cursor IDE', category: 'dev', desc: 'Môi trường phát triển tích hợp với AI.', website: 'https://cursor.sh/' },
+            { name: 'DALL·E 3', category: '2d', desc: 'Tạo hình ảnh từ văn bản với độ chi tiết cao.', website: 'https://openai.com/dall-e-3' },
+            { name: 'Data.ai', category: 'data', desc: 'Nền tảng phân tích thị trường ứng dụng.', website: 'https://data.ai/' },
+            { name: 'DataRobot', category: 'data', desc: 'Tự động hóa học máy.', website: 'https://www.datarobot.com/' },
+            { name: 'Deci.ai', category: '3d', desc: 'Tối ưu hóa mô hình AI.', website: 'https://deci.ai/' },
+            { name: 'Deep Dream Generator', category: '2d', desc: 'Tạo hình ảnh nghệ thuật với phong cách trừu tượng.', website: 'https://deepdreamgenerator.com/' },
+            { name: 'DeepAI', category: '2d', desc: 'Tạo hình ảnh và xử lý ngôn ngữ tự nhiên.', website: 'https://deepai.org/' },
+            { name: 'DeepInfra', category: 'ai_engineer', desc: 'Nền tảng triển khai mô hình AI với hiệu suất cao.', website: 'https://deepinfra.com/' },
+            { name: 'DeepL', category: 'localization', desc: 'Dịch thuật AI chất lượng cao.', website: 'https://www.deepl.com/' },
+            { name: 'DeepMotion', category: 'anim', desc: 'Chuyển đổi video 2D thành dữ liệu chuyển động.', website: 'https://www.deepmotion.com/' },
+            { name: 'DeepMotion 2D', category: 'anim', desc: 'Tạo chuyển động 2D từ mô tả văn bản.', website: 'https://www.deepmotion.com/animate-3d' },
+            { name: 'DeepSeek', category: 'general', desc: 'Mô hình ngôn ngữ lớn hiệu quả chi phí, kiến trúc MoE.', website: 'https://www.deepseek.com/' },
+            { name: 'Descript', category: 'video_editor', desc: 'Chỉnh sửa video và âm thanh với AI.', website: 'https://www.descript.com/' },
+            { name: 'Devika', category: 'dev', desc: 'Trợ lý phát triển phần mềm.', website: 'https://devika.ai/' },
+            { name: 'Devika AI', category: 'general', desc: 'AI agent mã nguồn mở cho lập trình.', website: 'https://devika.ai/' },
+            { name: 'DialogFlow CX', category: 'cskh', desc: 'Nền tảng xây dựng chatbot đàm thoại.', website: 'https://cloud.google.com/dialogflow-cx' },
+            { name: 'DialogStudio', category: 'narrative', desc: 'Nền tảng thiết kế đối thoại AI.', website: '' },
+            { name: 'Diffblue', category: 'qa', desc: 'Tạo kiểm thử đơn vị tự động.', website: 'https://www.diffblue.com/' },
+            { name: 'Discord + LangChain Agent', category: 'cskh', desc: 'Tạo bot Discord / support agent.', website: '' },
+            { name: 'DreamStudio.ai', category: '2d', desc: 'Giao diện cho Stable Diffusion.', website: 'https://beta.dreamstudio.ai/' },
+            { name: 'EbSynth', category: 'anim', desc: 'Áp dụng phong cách từ hình ảnh này sang hình ảnh khác.', website: 'https://ebsynth.com/' },
+            { name: 'Elai.io', category: 'video_editor', desc: 'Gen người nói, video quảng cáo.', website: 'https://elai.io/' },
+            { name: 'Excel Copilot', category: 'data', desc: 'Trợ lý AI cho Excel.', website: 'https://www.microsoft.com/en-us/microsoft-365/microsoft-copilot' },
+            { name: 'FeedbackAI', category: 'data', desc: 'Phân tích phản hồi người dùng.', website: '' },
+            { name: 'FeedHive', category: 'marketing', desc: 'Viết ad copy, devlog.', website: 'https://feedhive.com/' },
+            { name: 'FigJam + GPT', category: 'gd', desc: 'Tích hợp GPT vào FigJam cho brainstorm ý tưởng.', website: 'https://www.figma.com/figjam/ai/' },
+            { name: 'Firebase Predictions', category: 'data', desc: 'Dự đoán hành vi người dùng.', website: 'https://firebase.google.com/docs/predictions' },
+            { name: 'Fixie', category: 'ai_engineer', desc: 'Xây dựng agent AI.', website: 'https://www.fixie.ai/' },
+            { name: 'Fixie AI', category: 'dev', desc: 'Nền tảng xây dựng AI agent.', website: 'https://www.fixie.ai/' },
+            { name: 'Fliki', category: 'video_editor', desc: 'Gen video từ prompt, TTS, cinematic AI video.', website: 'https://fliki.ai/' },
+            { name: 'Flowise', category: 'ai_engineer', desc: 'Giao diện kéo thả cho LangChain.', website: 'https://flowiseai.com/' },
+            { name: 'Fooocus', category: '2d', desc: 'Tạo hình ảnh từ văn bản.', website: 'https://github.com/lllyasviel/Fooocus' },
+            { name: 'Function Calling', category: 'dev', desc: 'Gọi hàm trong mô hình ngôn ngữ lớn.', website: 'https://openai.com/blog/function-calling-and-the-latest-models' },
+            { name: 'Gaia AI', category: 'gd', desc: 'Tạo địa hình 3D.', website: 'https://proceduralworlds.com/gaia/' },
+            { name: 'GameDriver', category: 'qa', desc: 'Tự động kiểm thử game.', website: 'https://gamedriver.io/' },
+            { name: 'GameLoop AI', category: 'gd', desc: 'Công cụ thiết kế logic gameplay.', website: '' },
+            { name: 'Gemini (Google)', category: 'gd', desc: 'Brainstorm ý tưởng, phân tích tài liệu thiết kế, cân bằng game.', website: 'https://gemini.google.com/' },
+            { name: 'Gemini Canvas (Google)', category: 'gd', desc: 'Tạo mẫu nhanh (prototype) cho cơ chế game và ý tưởng.', website: 'https://gemini.google.com/canvas' },
+            { name: 'Genie', category: 'general', desc: 'Trợ lý AI cá nhân hóa.', website: '' },
+            { name: 'Gencraft', category: '2d', desc: 'Tạo hình ảnh nghệ thuật từ mô tả văn bản.', website: 'https://gencraft.com/' },
+            { name: 'Get3D (NVIDIA)', category: '3d', desc: 'Tạo mô hình 3D từ văn bản.', website: 'https://nv-tlabs.github.io/GET3D/' },
+            { name: 'GitHub Copilot', category: 'dev', desc: 'Gợi ý mã trong thời gian thực.', website: 'https://github.com/features/copilot' },
+            { name: 'Google UAC', category: 'marketing', desc: 'UA tự động hoá / optimize campaign.', website: 'https://ads.google.com/intl/en_us/campaigns/app-campaigns/' },
+            { name: 'GPT Bot Discord', category: 'cskh', desc: 'Chatbot AI cho Discord.', website: '' },
+            { name: 'GPT Engineer', category: 'dev', desc: 'Tạo mã từ mô tả.', website: 'https://github.com/AntonOsika/gpt-engineer' },
+            { name: 'GPT Researcher', category: 'ai_engineer', desc: 'AI agent tự động nghiên cứu và tổng hợp thông tin.', website: 'https://github.com/assafelovic/gpt-researcher' },
+            { name: 'GPT-4', category: 'localization', desc: 'Mô hình ngôn ngữ lớn cho dịch thuật.', website: 'https://openai.com/gpt-4' },
+            { name: 'GPT-4 Legal', category: 'hr', desc: 'Ứng dụng GPT-4 cho các tác vụ pháp lý.', website: '' },
+            { name: 'GPT-4 / GPT-4o', category: 'general', desc: 'LLM tổng quát, phân tích, viết nội dung', website: 'https://openai.com/gpt-4' },
+            { name: 'Groq', category: 'general', desc: 'Nền tảng suy luận AI tốc độ cao cho LLM.', website: 'https://groq.com/' },
+            { name: 'Harvey AI', category: 'hr', desc: 'Trợ lý pháp lý AI.', website: 'https://www.harvey.ai/' },
+            { name: 'Height AI', category: 'hr', desc: 'Nền tảng quản lý dự án với AI.', website: 'https://height.app/' },
+            { name: 'Helpshift AI', category: 'cskh', desc: 'Tự động hóa hỗ trợ khách hàng, trả lời các câu hỏi thường gặp.', website: 'https://www.helpshift.com/ai/' },
+            { name: 'HeyGen', category: 'video_editor', desc: 'Gen người nói, video quảng cáo.', website: 'https://www.heygen.com/' },
+            { name: 'HireVue AI', category: 'hr', desc: 'Phỏng vấn, tuyển dụng.', website: 'https://www.hirevue.com/' },
+            { name: 'Hotjar + GPT', category: 'cskh', desc: 'Phân tích UX và phản hồi người dùng.', website: 'https://www.hotjar.com/' },
+            { name: 'Hotpot.ai', category: '2d', desc: 'Công cụ thiết kế và chỉnh sửa hình ảnh.', website: 'https://hotpot.ai/' },
+            { name: 'Houdini AI', category: 'gd', desc: 'Tạo hiệu ứng và môi trường 3D.', website: 'https://www.sidefx.com/products/houdini/' },
+            { name: 'Ideogram', category: '2d', desc: 'Tạo hình ảnh với khả năng hiển thị chữ cái chính xác.', website: 'https://ideogram.ai/' },
+            { name: 'Illustroke', category: '2d', desc: 'Tạo hình ảnh vector từ văn bản.', website: 'https://illustroke.com/' },
+            { name: 'Imagine.art', category: '2d', desc: 'Tạo nghệ thuật AI từ mô tả.', website: 'https://imagine.art/' },
+            { name: 'Inworld', category: 'narrative', desc: 'Tạo nhân vật AI với trí tuệ nhân tạo.', website: 'https://www.inworld.ai/' },
+            { name: 'Intercom AI', category: 'cskh', desc: 'Tự động hóa hỗ trợ khách hàng.', website: 'https://www.intercom.com/ai' },
+            { name: 'Jasper', category: 'marketing', desc: 'Viết ad copy, devlog.', website: 'https://www.jasper.ai/' },
+            { name: 'Jules', category: 'dev', desc: 'AI agent lập trình tự động, hoạt động không đồng bộ, tích hợp với GitHub để viết unit test, xây dựng tính năng, sửa lỗi và cập nhật dependencies.', website: 'https://deepmind.google/discover/blog/jules-our-new-ai-coding-agent/' },
+            { name: 'Kaedim', category: '3d', desc: 'Tạo mô hình 3D từ hình ảnh.', website: 'https://www.kaedim.com/' },
+            { name: 'Kimi AI', category: 'general', desc: 'Trợ lý AI cá nhân hóa.', website: '' },
+            { name: 'Kinetix', category: 'anim', desc: 'Tạo hoạt ảnh từ video.', website: 'https://www.kinetix.tech/' },
+            { name: 'KoboldAI', category: 'narrative', desc: 'Tạo văn bản sáng tạo.', website: 'https://koboldai.org/' },
+            { name: 'Koyeb / Railway + GPT Plugin', category: 'dev', desc: 'Triển khai ứng dụng với AI.', website: '' },
+            { name: 'KREA', category: '2d', desc: 'Tạo hình ảnh từ văn bản với phong cách nghệ thuật.', website: 'https://www.krea.ai/' },
+            { name: 'Krikey AI', category: 'anim', desc: 'Tạo hoạt ảnh AR từ văn bản.', website: 'https://www.krikey.ai/' },
+            { name: 'Krikey AI (3D)', category: '3d', desc: 'Tạo hoạt ảnh 3D và tài sản.', website: 'https://www.krikey.ai/' },
+            { name: 'Krita', category: 'anim', desc: 'Phần mềm vẽ và hoạt hình mã nguồn mở.', website: 'https://krita.org/en/' },
+            { name: 'Kuaishou AI', category: 'marketing', desc: 'Ad design + kiểm duyệt nội dung ads.', website: 'https://www.kuaishou.com/en/developer/ai' },
+            { name: 'LangChain', category: 'ai_engineer', desc: 'Xây dựng ứng dụng với mô hình ngôn ngữ lớn.', website: 'https://www.langchain.com/' },
+            { name: 'LevelGen GPT', category: 'gd', desc: 'Tạo cấp độ game từ văn bản.', website: '' },
+            { name: 'Lexica Art', category: '2d', desc: 'Tìm kiếm và tạo hình ảnh AI.', website: 'https://lexica.art/' },
+            { name: 'Lexica + Canva', category: 'marketing', desc: 'Ad design + kiểm duyệt nội dung ads.', website: '' },
+            { name: 'Lexion', category: 'hr', desc: 'Trợ lý pháp lý AI.', website: 'https://www.lexion.ai/' },
+            { name: 'Leonardo.Ai', category: '2d', desc: 'Tạo hình ảnh chất lượng cao từ văn bản.', website: 'https://leonardo.ai/' },
+            { name: 'Linear + GPT', category: 'hr', desc: 'Tích hợp GPT vào Linear cho quản lý dự án.', website: 'https://linear.app/' },
+            { name: 'Loom AI', category: 'hr', desc: 'Ghi chú cuộc họp, tài liệu onboarding.', website: 'https://www.loom.com/ai' },
+            { name: 'LoreGen', category: 'narrative', desc: 'Tạo cốt truyện cho game.', website: '' },
+            { name: 'Lottielab', category: '2d', desc: 'Tạo hoạt hình vector cho web và ứng dụng.', website: 'https://www.lottielab.com/' },
+            { name: 'LottieFlow', category: '2d', desc: 'Tạo hoạt hình vector cho web và ứng dụng.', website: '' },
+            { name: 'Looker Studio + GPT', category: 'data', desc: 'Phân tích dữ liệu người chơi và kinh tế game sâu sắc.', website: 'https://cloud.google.com/looker-studio' },
+            { name: 'Luma AI', category: '3d', desc: 'Tạo mô hình 3D từ video.', website: 'https://lumalabs.ai/' },
+            { name: 'Lumen5', category: 'marketing', desc: 'Gen video quảng cáo.', website: 'https://lumen5.com/' },
+            { name: 'Mage.space', category: '2d', desc: 'Tạo hình ảnh từ văn bản với phong cách nghệ thuật.', website: 'https://www.mage.space/' },
+            { name: 'MagicForm', category: 'general', desc: 'Công cụ tạo biểu mẫu thông minh bằng AI.', website: '' },
+            { name: 'Magisto', category: 'video_editor', desc: 'Chỉnh sửa video và âm thanh với AI.', website: 'https://www.magisto.com/' },
+            { name: 'Magnific AI', category: '2d', desc: 'Nâng chi tiết, blend phong cách.', website: 'https://magnific.ai/' },
+            { name: 'MapMagic', category: 'gd', desc: 'Tạo bản đồ cho game.', website: 'https://assetstore.unity.com/packages/tools/terrain/mapmagic-2-124115' },
+            { name: 'MapScaper', category: 'gd', desc: 'Tạo bản đồ từ dữ liệu địa lý.', website: 'https://mapscaper.com/' },
+            { name: 'Maze', category: 'data', desc: 'Nền tảng kiểm thử người dùng.', website: 'https://maze.co/' },
+            { name: 'Meshy.AI', category: '3d', desc: 'Tạo mô hình 3D từ văn bản và hình ảnh.', website: 'https://www.meshy.ai/' },
+            { name: 'Meta Advantage+', category: 'marketing', desc: 'Tự động hóa và tối ưu hóa chiến dịch quảng cáo trên nền tảng Meta.', website: 'https://www.facebook.com/business/ads/advantage-plus' },
+            { name: 'MetaHuman Animator', category: 'anim', desc: 'Tạo hoạt ảnh khuôn mặt cho nhân vật ảo.', website: 'https://www.unrealengine.com/en-US/metahuman-animator' },
+            { name: 'Metabase + GPT', category: 'data', desc: 'Phân tích dữ liệu với AI.', website: 'https://www.metabase.com/' },
+            { name: 'Midjourney', category: '2d', desc: 'Tạo hình ảnh nghệ thuật từ văn bản.', website: 'https://www.midjourney.com/' },
+            { name: 'MindStudio', category: 'general', desc: 'Nền tảng tạo và triển khai AI agent không cần code.', website: 'https://www.mindstudio.ai/' },
+            { name: 'Mistral', category: 'general', desc: 'Mô hình ngôn ngữ lớn mã nguồn mở, hiệu suất cao.', website: 'https://mistral.ai/' },
+            { name: 'Mixamo', category: 'anim', desc: 'Rig & animation vật lý.', website: 'https://www.mixamo.com/' },
+            { name: 'modl:test', category: 'qa', desc: 'Kiểm thử game bằng AI.', website: '' },
+            { name: 'MotionCanvas', category: 'anim', desc: 'Tạo hoạt ảnh từ mã.', website: 'https://motioncanvas.io/' },
+            { name: 'Moov.ai', category: 'anim', desc: 'Tạo hoạt ảnh từ văn bản.', website: 'https://www.moov.ai/' },
+            { name: 'Move.ai', category: 'anim', desc: 'Ghi lại chuyển động từ video.', website: 'https://www.move.ai/' },
+            { name: 'Neural Frames', category: 'anim', desc: 'Tạo hoạt hình từ văn bản và hình ảnh với kiểm soát từng khung hình.', website: 'https://neuralframes.com/' },
+            { name: 'NightCafe', category: '2d', desc: 'Tạo và chia sẻ tác phẩm nghệ thuật AI.', website: 'https://nightcafe.studio/' },
+            { name: 'Notion AI', category: 'hr', desc: 'Soạn thảo tài liệu nội bộ, quy trình, chính sách một cách nhanh chóng.', website: 'https://www.notion.so/product/ai' },
+            { name: 'NovelAI', category: 'narrative', desc: 'Tạo văn bản sáng tạo.', website: 'https://novelai.net/' },
+            { name: 'NPC Studio', category: 'narrative', desc: 'Tạo nhân vật AI cho game.', website: '' },
+            { name: 'OpenArt', category: '2d', desc: 'Nền tảng chia sẻ và tạo nghệ thuật AI.', website: 'https://openart.ai/' },
+            { name: 'OpenDevin', category: 'dev', desc: 'Dự án mã nguồn mở cho AI agent hỗ trợ phát triển phần mềm.', website: 'https://github.com/OpenDevin/OpenDevin' },
+            { name: 'Optimizely AI', category: 'data', desc: 'Tối ưu hóa A/B testing.', website: 'https://www.optimizely.com/solutions/ai/' },
+            { name: 'Otter AI', category: 'hr', desc: 'Ghi chép cuộc họp tự động.', website: 'https://otter.ai/' },
+            { name: 'PaintsChainer', category: '2d', desc: 'Tô màu tự động cho bản vẽ.', website: 'https://paintschainer.preferred.tech/' },
+            { name: 'Paradox AI', category: 'hr', desc: 'Phỏng vấn, tuyển dụng.', website: 'https://www.paradox.ai/' },
+            { name: 'Pencil AI', category: 'marketing', desc: 'Tạo quảng cáo hiệu suất cao bằng AI.', website: 'https://www.trypencil.com/' },
+            { name: 'Perchance.org', category: '2d', desc: 'Tạo nội dung ngẫu nhiên bằng AI.', website: 'https://perchance.org/' },
+            { name: 'Perplexity', category: 'general', desc: 'Công cụ tìm kiếm và nghiên cứu đối thoại với khả năng tổng hợp sâu.', website: 'https://www.perplexity.ai/' },
+            { name: 'Phind', category: 'general', desc: 'Công cụ tìm kiếm AI chuyên biệt cho nhà phát triển.', website: 'https://www.phind.com/' },
+            { name: 'Photosonic', category: '2d', desc: 'Tạo hình ảnh từ văn bản.', website: 'https://photosonic.writesonic.com/' },
+            { name: 'Pika', category: 'marketing', desc: 'Công cụ tạo và chỉnh sửa video ngắn mạnh mẽ.', website: 'https://pika.art/' },
+            { name: 'Pika Labs', category: 'video_editor', desc: 'Gen video từ prompt, TTS, cinematic AI video.', website: 'https://pika.art/' },
+            { name: 'PixVerse', category: 'anim', desc: 'Tạo video hoạt hình từ văn bản.', website: 'https://pixverse.ai/' },
+            { name: 'Pixlr', category: '2d', desc: 'Chỉnh sửa ảnh trực tuyến với AI.', website: 'https://pixlr.com/' },
+            { name: 'Plask', category: 'anim', desc: 'Ghi lại chuyển động từ video.', website: 'https://plask.ai/' },
+            { name: 'Plask AI', category: 'anim', desc: 'Nền tảng rigging và hoạt ảnh 3D dựa trên AI.', website: 'https://plask.ai/' },
+            { name: 'Poe', category: 'general', desc: 'Nền tảng tổng hợp chatbot AI, truy cập nhiều mô hình.', website: 'https://poe.com/' },
+            { name: 'Point-E', category: '3d', desc: 'Tạo mô hình 3D từ văn bản.', website: 'https://github.com/openai/point-e' },
+            { name: 'Polycam', category: '3d', desc: 'Quét vật thể thực thành 3D.', website: 'https://polycam.ai/' },
+            { name: 'Product Monkey', category: 'hr', desc: 'Trợ lý AI cho quản lý sản phẩm.', website: '' },
+            { name: 'Project Mariner', category: 'cskh', desc: 'Agent AI dưới dạng tiện ích mở rộng Chrome, tự động hóa các tác vụ duyệt web phức tạp và đa bước như đặt chỗ, mua sắm, nhập liệu.', website: 'https://deepmind.google/discover/blog/project-mariner-an-ai-agent-for-web-automation/' },
+            { name: 'Promethean AI', category: 'gd', desc: 'Tạo môi trường 3D từ văn bản.', website: 'https://www.prometheanai.com/' },
+            { name: 'PromptLayer', category: 'ai_engineer', desc: 'Quản lý prompt.', website: 'https://www.promptlayer.com/' },
+            { name: 'PromptPerfect', category: 'ai_engineer', desc: 'Tối ưu hóa prompt.', website: 'https://promptperfect.xyz/' },
+            { name: 'QA Wolf + GPT', category: 'qa', desc: 'Tự động kiểm thử end-to-end.', website: 'https://www.qawolf.com/' },
+            { name: 'QuickVid', category: 'video_editor', desc: 'Gen video từ prompt, TTS, cinematic AI video.', website: 'https://quickvid.ai/' },
+            { name: 'Rabbit R1', category: 'general', desc: 'Thiết bị AI cầm tay tập trung vào giao diện bằng giọng nói.', website: 'https://www.rabbit.tech/' },
+            { name: 'RADiCAL', category: 'anim', desc: 'Ghi lại chuyển động từ video.', website: 'https://radical.ai/' },
+            { name: 'RealityScan', category: '3d', desc: 'Quét vật thể thực thành 3D.', website: 'https://www.capturingreality.com/RealityScan' },
+            { name: 'Recraft', category: '2d', desc: 'Tạo hình ảnh vector từ văn bản.', website: 'https://www.recraft.ai/' },
+            { name: 'Replit AI Agent', category: 'dev', desc: 'Môi trường phát triển trực tuyến với AI.', website: 'https://replit.com/ai' },
+            { name: 'Rezi.ai', category: 'hr', desc: 'Viết CV, quản lý nhân sự.', website: 'https://rezi.ai/' },
+            { name: 'ReTool + GPT', category: 'data', desc: 'Xây dựng ứng dụng nội bộ với AI.', website: 'https://retool.com/ai' },
+            { name: 'Revealbot', category: 'marketing', desc: 'UA tự động hoá / optimize campaign.', website: 'https://revealbot.com/' },
+            { name: 'Rokoko Vision', category: 'anim', desc: 'Ghi lại chuyển động từ video.', website: 'https://www.rokoko.com/products/rokoko-vision' },
+            { name: 'Runway', category: 'marketing', desc: 'Công cụ sáng tạo đa phương tiện với AI.', website: 'https://runwayml.com/' },
+            { name: 'Runway Gen-3', category: 'video_editor', desc: 'Gen video từ prompt, TTS, cinematic AI video.', website: 'https://runwayml.com/gen-3-alpha/' },
+            { name: 'Runway Motion', category: 'anim', desc: 'Tạo video từ text/ảnh, kiểm soát chuyển động và camera.', website: 'https://runwayml.com/motion/' },
+            { name: 'Runway Motion Brush', category: 'anim', desc: 'Tạo hoạt ảnh từ hình ảnh.', website: 'https://runwayml.com/motion-brush/' },
+            { name: 'Scenario 3D', category: '3d', desc: 'Tạo tài sản 3D từ văn bản.', website: 'https://www.scenario.com/' },
+            { name: 'Scenario.gg', category: 'gd', desc: 'Tạo tài sản game từ văn bản.', website: 'https://www.scenario.com/' },
+            { name: 'SeekOut', category: 'hr', desc: 'Phỏng vấn, tuyển dụng.', website: 'https://seekout.com/' },
+            { name: 'SensorTower + GPT', category: 'data', desc: 'Phân tích dữ liệu thị trường với AI.', website: 'https://sensortower.com/' },
+            { name: 'Sentry + GPT', category: 'qa', desc: 'Ghi lại và phân tích lỗi.', website: 'https://sentry.io/product/ai/' },
+            { name: 'Shakr', category: 'marketing', desc: 'Tạo video quảng cáo tự động.', website: 'https://www.shakr.com/' },
+            { name: 'SlidesAI', category: 'hr', desc: 'Tạo slide thuyết trình bằng AI.', website: 'https://www.slidesai.io/' },
+            { name: 'Sloyd', category: '3d', desc: 'Tạo mô hình 3D từ văn bản.', website: 'https://www.sloyd.ai/' },
+            { name: 'Smol Developer', category: 'general', desc: 'AI agent nhỏ gọn để tạo mã.', website: 'https://github.com/smol-ai/smol-developer' },
+            { name: 'Sora (OpenAI)', category: 'marketing', desc: 'Mô hình tạo video chân thực với các cảnh quay phức tạp.', website: 'https://openai.com/sora' },
+            { name: 'Sourcegraph Cody', category: 'dev', desc: 'Trợ lý lập trình AI.', website: 'https://sourcegraph.com/cody' },
+            { name: 'Spline', category: '3d', desc: 'Thiết kế 3D tương tác trong trình duyệt.', website: 'https://spline.design/' },
+            { name: 'Sprig + GPT', category: 'cskh', desc: 'Thu thập phản hồi người dùng với AI.', website: 'https://sprig.com/' },
+            { name: 'Stable Diffusion', category: '2d', desc: 'Mô hình mã nguồn mở linh hoạt cho tạo ảnh.', website: 'https://stability.ai/stable-diffusion' },
+            { name: 'Stable Diffusion 3', category: '2d', desc: 'Mô hình tạo hình ảnh từ văn bản.', website: 'https://stability.ai/stable-diffusion-3' },
+            { name: 'Stack AI', category: 'dev', desc: 'Nền tảng xây dựng và triển khai ứng dụng AI.', website: 'https://stack-ai.com/' },
+            { name: 'StarryAI', category: '2d', desc: 'Tạo hình ảnh từ văn bản với nhiều phong cách nghệ thuật.', website: 'https://starryai.com/' },
+            { name: 'Stitch', category: '2d', desc: 'Công cụ AI thiết kế giao diện người dùng (UI) và tạo mã nguồn frontend tương ứng từ mô tả ngôn ngữ tự nhiên hoặc ảnh prompt.', website: 'https://timesofindia.indiatimes.com/technology/artificial-intelligence/google-introduces-stitch-ai-powered-tool-for-app-design-and-development-at-google-i/o-2025/articleshow/121332071.cms' },
+            { name: 'StoryboardHero', category: 'anim', desc: 'Tạo storyboard từ văn bản.', website: 'https://storyboardhero.ai/' },
+            { name: 'Superagent', category: 'ai_engineer', desc: 'Xây dựng agent AI.', website: 'https://superagent.ai/' },
+            { name: 'Synthesia', category: 'video_editor', desc: 'Gen người nói, video quảng cáo.', website: 'https://www.synthesia.io/' },
+            { name: 'Tabnine', category: 'dev', desc: 'Gợi ý mã bằng AI.', website: 'https://www.tabnine.com/' },
+            { name: 'Taskade AI', category: 'hr', desc: 'Nền tảng quản lý tác vụ với AI.', website: 'https://www.taskade.com/ai' },
+            { name: 'TaskWeaver', category: 'general', desc: 'Nghiên cứu, tối ưu prompt, đa tác vụ', website: 'https://microsoft.github.io/TaskWeaver/' },
+            { name: 'Test.ai', category: 'qa', desc: 'Tự động kiểm thử giao diện người dùng.', website: 'https://test.ai/' },
+            { name: 'Testim', category: 'qa', desc: 'Tự động kiểm thử giao diện người dùng.', website: 'https://www.testim.io/' },
+            { name: 'Text2Texture', category: '3d', desc: 'Tạo kết cấu từ văn bản.', website: 'https://text2texture.com/' },
+            { name: 'ToonCrafter', category: '2d', desc: 'Tạo hoạt hình từ bản vẽ tay.', website: 'https://tooncrafter.com/' },
+            { name: 'Toolformer', category: 'ai_engineer', desc: 'Tạo công cụ cho mô hình ngôn ngữ lớn.', website: 'https://arxiv.org/abs/2302.04761' },
+            { name: 'Tripo AI', category: '3d', desc: 'Tạo mô hình 3D từ hình ảnh.', website: 'https://www.tripo3d.ai/' },
+            { name: 'TurboSquid', category: '3d', desc: 'Thị trường mô hình 3D.', website: 'https://www.turbosquid.com/' },
+            { name: 'TVPaint Animation', category: 'anim', desc: 'Công cụ hoạt hình 2D truyền thống.', website: 'https://www.tvpaint.com/' },
+            { name: 'UIzard', category: '2d', desc: 'Thiết kế giao diện người dùng từ văn bản.', website: 'https://uizard.com/' },
+            { name: 'Unity Sentis', category: 'gd', desc: 'Tích hợp AI vào Unity.', website: 'https://unity.com/products/sentis' },
+            { name: 'UXTest GPT', category: 'gd', desc: 'AI hỗ trợ kiểm thử UX.', website: '' },
+            { name: 'Veo 3', category: 'marketing', desc: 'Mô hình tạo video từ văn bản và hình ảnh mới nhất của Google. Flow là công cụ làm phim AI tích hợp chặt chẽ với Veo, Imagen và Gemini để tạo và chỉnh sửa video điện ảnh.', website: 'https://deepmind.google/discover/blog/veo-a-new-frontier-in-generative-video/' },
+            { name: 'Vectorizer AI', category: '2d', desc: 'Chuyển đổi hình ảnh raster thành vector.', website: 'https://vectorizer.ai/' },
+            { name: 'Vidyo AI', category: 'video_editor', desc: 'Gen video từ prompt, TTS, cinematic AI video.', website: 'https://vidyo.ai/' },
+            { name: 'Visily', category: '2d', desc: 'Công cụ thiết kế giao diện người dùng với AI.', website: 'https://visily.ai/' },
+            { name: 'Vizard AI', category: 'video_editor', desc: 'Gen video từ prompt, TTS, cinematic AI video.', website: '' },
+            { name: 'Volograms', category: 'anim', desc: 'Tạo mô hình 3D từ video.', website: 'https://volograms.com/' },
+            { name: 'Wonder Dynamics', category: 'anim', desc: 'Nền tảng AI cho hoạt ảnh nhân vật trong video.', website: 'https://wonderdynamics.com/' },
+            { name: 'Workday AI', category: 'hr', desc: 'Viết CV, quản lý nhân sự.', website: 'https://www.workday.com/en-us/products/ai-ml.html' },
+            { name: 'World Machine AI', category: 'gd', desc: 'Tạo địa hình 3D.', website: 'https://www.world-machine.com/' },
+            { name: 'Writesonic', category: 'marketing', desc: 'Viết ad copy, devlog.', website: 'https://writesonic.com/' },
+            { name: 'You.com', category: 'general', desc: 'Research tổng hợp kiến thức', website: 'https://you.com/' },
+            // Google Ecosystem specific tools (ensure they have descriptions)
+            { name: 'Gemini 2.5', desc: 'Mô hình đa phương thức chủ lực của Google, với các phiên bản Pro, Flash, và khả năng "Deep Think" cho lý luận nâng cao. Hỗ trợ cửa sổ ngữ cảnh cực lớn và tạo đầu ra âm thanh tự nhiên.', category: 'general', website: 'https://gemini.google.com/' },
+            { name: 'Veo 3 & Flow', desc: 'Mô hình tạo video từ văn bản và hình ảnh mới nhất của Google. Flow là công cụ làm phim AI tích hợp chặt chẽ với Veo, Imagen và Gemini để tạo và chỉnh sửa video điện ảnh.', category: 'video_editor', website: 'https://deepmind.google/discover/blog/veo-a-new-frontier-in-generative-video/' },
+            { name: 'Imagen 4 & Whisk', desc: 'Phiên bản mới nhất của mô hình tạo hình ảnh từ văn bản của Google. Whisk là công cụ thử nghiệm cho phép tạo hình ảnh bằng cách sử dụng các hình ảnh khác làm prompt, và Whisk Animate biến ảnh tĩnh thành video ngắn.', category: '2d', website: 'https://deepmind.google/discover/blog/imagen-4/' },
+            { name: 'Stitch', desc: 'Công cụ AI thiết kế giao diện người dùng (UI) và tạo mã nguồn frontend tương ứng từ mô tả ngôn ngữ tự nhiên hoặc ảnh prompt.', category: '2d', website: 'https://timesofindia.indiatimes.com/technology/artificial-intelligence/google-introduces-stitch-ai-powered-tool-for-app-design-and-development-at-google-i/o-2025/articleshow/121332071.cms' },
+            { name: 'Jules', desc: 'AI agent lập trình tự động, hoạt động không đồng bộ, tích hợp với GitHub để viết unit test, xây dựng tính năng, sửa lỗi và cập nhật dependencies.', category: 'dev', website: 'https://deepmind.google/discover/blog/jules-our-new-ai-coding-agent/' },
+            { name: 'AlphaEvolve', desc: 'Agent AI tiên tiến để khám phá và tối ưu hóa các thuật toán phức tạp, có khả năng phát triển và cải tiến toàn bộ codebase.', category: 'dev', website: 'https://deepmind.google/discover/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/' },
+            { name: 'Project Mariner', desc: 'Agent AI dưới dạng tiện ích mở rộng Chrome, tự động hóa các tác vụ duyệt web phức tạp và đa bước như đặt chỗ, mua sắm, nhập liệu.', category: 'cskh', website: 'https://deepmind.google/discover/blog/project-mariner-an-ai-agent-for-web-automation/' },
+            { name: 'Vertex AI', desc: 'Nền tảng hợp nhất của Google Cloud để xây dựng, triển khai và quản lý các mô hình AI một cách hiệu quả, bao gồm cả Gemini và Veo.', category: 'ai_engineer', website: 'https://cloud.google.com/vertex-ai' },
+            { name: 'Gemma (Open Source)', desc: 'Dòng mô hình ngôn ngữ lớn mã nguồn mở, nhẹ và tiên tiến của Google, được xây dựng dựa trên công nghệ Gemini, cho phép tùy biến sâu và kiểm soát chi phí.', category: 'ai_engineer', website: 'https://ai.google.dev/gemma' },
+            { name: 'Project Astra (Future)', desc: 'Thế hệ tiếp theo của AI assistant, một hệ thống AI đa phương thức có khả năng hiểu ngữ cảnh sâu sắc, nhìn và nghe thế giới xung quanh giống như con người.', category: 'general', website: 'https://deepmind.google/discover/blog/project-astra-our-vision-for-the-future-of-ai-assistants/' }
+        ],
+        giants: [
+            { 
+                name: 'Google', 
+                logo: '☁️',
+                models: 'Gemini 2.5 Pro, Veo 3, Imagen 4, Gemma',
+                strengths: [
+                    'Cửa sổ ngữ cảnh cực lớn (lên tới 10M token).',
+                    'Hệ sinh thái tích hợp sâu (Cloud, Workspace, Android).',
+                    'Khả năng "Deep Think" cho lý luận phức tạp.',
+                    'Thế mạnh về mã nguồn mở với Gemma.'
+                ],
+                color: 'bg-blue-100',
+                textColor: 'text-blue-800'
+            },
+            { 
+                name: 'OpenAI', 
+                logo: '🤖',
+                models: 'GPT-4o, Sora, DALL-E 3',
+                strengths: [
+                    'Tiên phong và dẫn đầu về năng lực đa phương thức (omni).',
+                    'Chất lượng tạo video (Sora) và hình ảnh hàng đầu.',
+                    'Hệ sinh thái API và plugin trưởng thành, phổ biến.',
+                    'Giao diện người dùng (ChatGPT) thân thiện, dễ tiếp cận.'
+                ],
+                color: 'bg-green-100',
+                textColor: 'text-green-800'
+            },
+            { 
+                name: 'Anthropic', 
+                logo: '📜',
+                models: 'Claude 3 (Opus, Sonnet, Haiku)',
+                strengths: [
+                    'Tập trung vào AI an toàn và có trách nhiệm ("AI Hiến pháp").',
+                    'Khả năng xử lý văn bản dài và viết lách sáng tạo xuất sắc.',
+                    'Cam kết không sử dụng dữ liệu người dùng để huấn luyện.',
+                    'Cửa sổ ngữ cảnh lớn (200K token).'
+                ],
+                color: 'bg-purple-100',
+                textColor: 'text-purple-800'
+            },
+            { 
+                name: 'Meta', 
+                logo: '👍',
+                models: 'Llama 3, Llama 4 (sắp tới)',
+                strengths: [
+                    'Dẫn đầu trong lĩnh vực mã nguồn mở mạnh mẽ, cho phép thương mại.',
+                    'Khả năng tự host và tinh chỉnh sâu, kiểm soát dữ liệu tốt.',
+                    'Cộng đồng phát triển lớn và năng động.',
+                    'Hiệu suất cao với chi phí thấp hơn.'
+                ],
+                color: 'bg-sky-100',
+                textColor: 'text-sky-800'
+            }
+        ],
+        issues: [
+            {
+                title: 'Đạo đức & AI có trách nhiệm',
+                icon: '⚖️',
+                content: 'Các vấn đề như thiên kiến trong mô hình, deepfake và thông tin sai lệch đòi hỏi sự giám sát chặt chẽ của con người. Các công ty cần xây dựng các hệ thống human-in-the-loop và tuân thủ các quy định như Đạo luật AI của EU để đảm bảo việc sử dụng AI một cách công bằng và an toàn.'
+            },
+            {
+                title: 'Sở hữu trí tuệ (IP) & Bản quyền',
+                icon: '©️',
+                content: 'Câu hỏi về bản quyền cho nội dung do AI tạo ra và việc sử dụng các tác phẩm có bản quyền để huấn luyện AI vẫn còn phức tạp. Hướng dẫn từ Văn phòng Bản quyền Hoa Kỳ cho thấy nội dung do AI tạo ra có thể được bảo hộ, nhưng chỉ khi có sự đóng góp sáng tạo đáng kể của con người; tuy nhiên, ngưỡng "sáng tạo đủ" vẫn còn mơ hồ. Việc các công ty AI sử dụng lượng lớn dữ liệu, bao gồm cả các tác phẩm có bản quyền (hình ảnh, văn bản, âm nhạc, video), để huấn luyện mô hình của họ đã gây ra nhiều tranh cãi pháp lý và phản đối từ các ngành công nghiệp sáng tạo. Hollywood và ngành công nghiệp âm nhạc Anh đã bày tỏ lo ngại về việc này và yêu cầu các biện pháp bảo vệ quyền của người sáng tạo. AI có khả năng sao chép khuôn mặt, giọng nói và thậm chí cả "linh hồn" của một người, đặt ra thách thức đối với quyền hình ảnh cá nhân và các quyền nhân thân khác. Vụ việc giữa nữ diễn viên Scarlett Johansson và OpenAI về việc sử dụng một giọng nói được cho là tương tự giọng của cô là một ví dụ điển hình về những rủi ro này. Các công ty game và ứng dụng cần xem xét kỹ lưỡng chính sách bảo mật dữ liệu của các nhà cung cấp AI mà họ hợp tác. Điều này bao gồm cách dữ liệu người dùng (cả dữ liệu đầu vào cho AI và dữ liệu do AI tạo ra) được thu thập, sử dụng, lưu trữ và bảo vệ. Các nhà cung cấp như RunwayML, Leonardo.ai, Perplexity AI, và Google Cloud đều có các chính sách riêng về vấn đề này. Đáng chú ý, Google Cloud có cam kết không sử dụng dữ liệu của khách hàng doanh nghiệp để huấn luyện các mô hình nền tảng của họ trừ khi có sự đồng ý rõ ràng từ phía khách hàng.'
+            },
+            {
+                title: 'Nhân sự & Kỹ năng',
+                icon: '🎓',
+                content: 'Thành công với AI đòi hỏi đầu tư vào con người. Mặc dù giáo dục về AI và khoa học máy tính đang mở rộng, vẫn còn những khoảng trống về khả năng tiếp cận và sự sẵn sàng của lực lượng lao động. Các công ty game cần chủ động đào tạo nhân viên hiện tại (upskilling và reskilling) và tuyển dụng các chuyên gia AI. Nhiều tài nguyên học tập miễn phí hoặc chi phí thấp có sẵn từ các nhà cung cấp lớn như Google, Microsoft, IBM, LinkedIn Learning, cũng như các nền tảng giáo dục trực tuyến, giúp nhân viên tự trang bị kiến thức và kỹ năng AI. Tài liệu nghiên cứu nhấn mạnh vai trò ngày càng quan trọng của Kỹ sư AI trong việc xây dựng các quy trình làm việc dựa trên LLM, tự động hóa các tác vụ, và tích hợp các hệ thống AI nội bộ cũng như các công cụ từ bên thứ ba. Cần có một chiến lược rõ ràng và lộ trình cụ thể để tích hợp các công cụ AI vào các bộ phận khác nhau, từ nghệ thuật, lập trình đến marketing và chăm sóc khách hàng, đảm bảo sự đồng bộ và hiệu quả.'
+            },
+            {
+                title: 'Chi phí & Lợi tức đầu tư (ROI)',
+                icon: '💰',
+                content: 'Việc áp dụng AI cần được tính toán cẩn thận. Chi phí bao gồm phí đăng ký, sử dụng API, và chi phí huấn luyện model tùy chỉnh. ROI có thể được đo lường qua việc tăng năng suất, giảm thời gian ra mắt sản phẩm, và cải thiện các chỉ số kinh doanh như LTV. Nên bắt đầu với các dự án có ROI rõ ràng. AI có thể giúp cắt giảm chi phí vận hành đáng kể. Ví dụ, các AI agent hỗ trợ các quy trình backend được báo cáo có thể giảm tới 40% chi phí liên quan. Ngoài ra, AI giúp tăng năng suất lao động, giảm thời gian cần thiết để hoàn thành nhiều tác vụ. Lợi tức đầu tư từ việc áp dụng AI có thể được thể hiện qua nhiều yếu tố, bao gồm tăng năng suất của nhân viên, giảm thời gian đưa sản phẩm game ra thị trường, cải thiện hiệu quả của các chiến dịch UA, tăng mức độ tương tác và giữ chân người chơi, và cuối cùng là tăng giá trị vòng đời khách hàng (LTV).'
+            }
+        ]
+    };
+    
+    const marketChartCtx = document.getElementById('marketShareChart').getContext('2d');
+    new Chart(marketChartCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Google/DeepMind', 'OpenAI/Microsoft', 'Meta', 'Anthropic', 'AI Trung Quốc (DeepSeek, Qwen)', 'Mistral AI'],
+            datasets: [{
+                label: 'Tầm ảnh hưởng & Năng lực Công nghệ (Điểm tương đối)',
+                data: [95, 92, 85, 82, 78, 75],
+                backgroundColor: [
+                    'rgba(66, 133, 244, 0.7)',
+                    'rgba(13, 148, 136, 0.7)',
+                    'rgba(59, 130, 246, 0.7)',
+                    'rgba(168, 85, 247, 0.7)',
+                    'rgba(239, 68, 68, 0.7)',
+                    'rgba(249, 115, 22, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(66, 133, 244, 1)',
+                    'rgba(13, 148, 136, 1)',
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(168, 85, 247, 1)',
+                    'rgba(239, 68, 68, 1)',
+                    'rgba(249, 115, 22, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.x !== null) {
+                                label += context.parsed.x + ' điểm';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Điểm Ảnh Hưởng Tương Đối'
+                    }
+                }
+            }
+        }
+    });
+
+    const filterButtonsContainer = document.getElementById('filter-buttons');
+    const toolsGrid = document.getElementById('tools-grid');
+    const showMoreContainer = document.getElementById('show-more-container');
+    const showMoreBtn = document.getElementById('show-more-btn');
+    const toolDetailModal = document.getElementById('tool-detail-modal');
+    const modalToolName = document.getElementById('modal-tool-name');
+    const modalToolDescription = document.getElementById('modal-tool-description');
+    const modalToolWebsite = document.getElementById('modal-tool-website');
+    const modalCloseBtn = toolDetailModal.querySelector('.modal-close-btn');
+
+    let currentFilter = 'all';
+    let displayAllTools = false;
+    const initialDisplayLimit = 30; // Number of tools to show initially for 'all' category
+
+    // LLM Idea Generator elements
+    const aiIdeaDepartmentSelect = document.getElementById('ai-idea-department');
+    const aiIdeaPromptInput = document.getElementById('ai-idea-prompt');
+    const generateAiIdeaBtn = document.getElementById('generate-ai-idea-btn');
+    const generateAiIdeaText = document.getElementById('generate-ai-idea-text');
+    const generateAiIdeaSpinner = document.getElementById('generate-ai-idea-spinner');
+    const aiIdeaOutput = document.getElementById('ai-idea-output');
+    const generatedToolName = document.getElementById('generated-tool-name');
+    const generatedToolDescription = document.getElementById('generated-tool-description');
+    const generatedToolCategory = document.getElementById('generated-tool-category');
+    const aiIdeaError = document.getElementById('ai-idea-error');
+    const aiIdeaErrorMessage = document.getElementById('ai-idea-error-message');
+
+
+    // Populate filter buttons
+    aiData.departments.forEach(dept => {
+        const button = document.createElement('button');
+        button.className = 'filter-btn px-4 py-2 text-sm font-medium rounded-full border border-stone-300 bg-white text-stone-700 hover:bg-stone-50';
+        button.textContent = `${dept.icon} ${dept.name}`;
+        button.dataset.filter = dept.id;
+        if (dept.id === 'all') {
+            button.classList.add('active');
+        }
+        filterButtonsContainer.appendChild(button);
+    });
+
+    // Populate department select for AI Idea Generator
+    aiData.departments.filter(d => d.id !== 'all').forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept.name;
+        option.textContent = dept.name;
+        aiIdeaDepartmentSelect.appendChild(option);
+    });
+
+    // Render tools based on filter and display limit
+    const renderTools = () => {
+        toolsGrid.innerHTML = '';
+        let filteredTools = aiData.tools.filter(tool => tool.category !== 'google_ecosystem'); // Exclude google_ecosystem tools from this grid
+        
+        if (currentFilter !== 'all') {
+            filteredTools = filteredTools.filter(tool => tool.category === currentFilter);
+        }
+
+        // Sort tools alphabetically by name
+        filteredTools.sort((a, b) => a.name.localeCompare(b.name));
+
+        let toolsToDisplay = filteredTools;
+        if (currentFilter === 'all' && !displayAllTools && filteredTools.length > initialDisplayLimit) {
+            toolsToDisplay = filteredTools.slice(0, initialDisplayLimit);
+            showMoreContainer.classList.remove('hidden');
+            showMoreBtn.textContent = 'Hiển thị thêm';
+        } else if (currentFilter === 'all' && displayAllTools) {
+            showMoreContainer.classList.remove('hidden');
+            showMoreBtn.textContent = 'Ẩn bớt';
+        } else {
+            showMoreContainer.classList.add('hidden');
+        }
+
+        toolsToDisplay.forEach(tool => {
+            const card = document.createElement('div');
+            card.className = 'card bg-white p-5 rounded-lg shadow-sm border border-stone-200 flex flex-col';
+            const dept = aiData.departments.find(d => d.id === tool.category);
+            card.innerHTML = `
+                <div class="flex-grow">
+                    <div class="flex items-center mb-3">
+                        <span class="text-xl mr-3">${dept ? dept.icon : '🔧'}</span>
+                        <h3 class="font-semibold text-stone-800 text-base leading-tight">${tool.name}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 line-clamp-2">${tool.desc}</p>
+                </div>
+            `;
+            card.addEventListener('click', () => showToolDetail(tool));
+            toolsGrid.appendChild(card);
+        });
+    };
+
+    // Event listener for filter buttons
+    filterButtonsContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            document.querySelector('.filter-btn.active').classList.remove('active');
+            e.target.classList.add('active');
+            currentFilter = e.target.dataset.filter;
+            displayAllTools = false; // Reset show all when filter changes
+            renderTools();
+        }
+    });
+
+    // Event listener for show more/less button
+    showMoreBtn.addEventListener('click', () => {
+        displayAllTools = !displayAllTools;
+        renderTools();
+    });
+
+    // Show tool detail modal
+    const showToolDetail = (tool) => {
+        modalToolName.textContent = tool.name;
+        modalToolDescription.textContent = tool.desc;
+        if (tool.website && tool.website !== '') {
+            modalToolWebsite.href = tool.website;
+            modalToolWebsite.classList.remove('hidden');
+        } else {
+            modalToolWebsite.classList.add('hidden');
+        }
+        toolDetailModal.classList.add('visible');
+    };
+
+    // Hide tool detail modal
+    const hideToolDetail = () => {
+        toolDetailModal.classList.remove('visible');
+    };
+
+    // Event listeners for modal close
+    modalCloseBtn.addEventListener('click', hideToolDetail);
+    toolDetailModal.addEventListener('click', (e) => {
+        if (e.target === toolDetailModal) { // Close when clicking outside content
+            hideToolDetail();
+        }
+    });
+
+    const giantsContainer = document.getElementById('giants-comparison');
+    aiData.giants.forEach(giant => {
+        const card = document.createElement('div');
+        card.className = `card ${giant.color} p-6 rounded-lg flex flex-col h-full`;
+        card.innerHTML = `
+            <div class="flex items-center mb-4">
+                <span class="text-4xl mr-4">${giant.logo}</span>
+                <h3 class="text-2xl font-bold ${giant.textColor}">${giant.name}</h3>
+            </div>
+            <p class="font-semibold ${giant.textColor} mb-2">Mô hình chính:</p>
+            <p class="text-sm ${giant.textColor} opacity-90 mb-4">${giant.models}</p>
+            <p class="font-semibold ${giant.textColor} mb-2">Thế mạnh:</p>
+            <ul class="space-y-2 text-sm list-disc list-inside ${giant.textColor} opacity-90 flex-grow">
+                ${giant.strengths.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+        `;
+        giantsContainer.appendChild(card);
+    });
+
+    const accordionContainer = document.getElementById('accordion');
+    aiData.issues.forEach((issue, index) => {
+        const item = document.createElement('div');
+        item.className = 'bg-white rounded-lg shadow-sm border border-stone-200';
+        item.innerHTML = `
+            <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-stone-800">
+                <span class="flex items-center">
+                    <span class="text-2xl mr-3">${issue.icon}</span>
+                    ${issue.title}
+                </span>
+                <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="accordion-content">
+                <div class="p-4 pt-0 text-gray-600">
+                    <p>${issue.content}</p>
+                </div>
+            </div>
+        `;
+        accordionContainer.appendChild(item);
+    });
+
+    accordionContainer.addEventListener('click', (e) => {
+        const button = e.target.closest('.accordion-button');
+        if (button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('svg');
+            
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.classList.remove('rotate-180');
+            } else {
+                document.querySelectorAll('.accordion-content').forEach(el => {
+                    el.style.maxHeight = null;
+                    el.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+                });
+                content.style.maxHeight = content.scrollHeight + "px";
+                icon.classList.add('rotate-180');
+            }
+        }
+    });
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            if(targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+            if (mobileMenu.classList.contains('hidden') === false) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    });
+    
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main section');
+
+    const activateNavLink = () => {
+        let index = sections.length;
+        while(--index && window.scrollY + 100 < sections[index].offsetTop) {}
+        
+        navLinks.forEach((link) => link.classList.remove('active'));
+        if(index >= 0 && navLinks[index]){
+             navLinks[index].classList.add('active');
+        }
+    };
+
+    // Handle clicks on Google Ecosystem diagram nodes
+    document.getElementById('google').addEventListener('click', (e) => {
+        const node = e.target.closest('.diagram-node');
+        if (node) {
+            const toolName = node.dataset.toolName;
+            const tool = aiData.tools.find(t => t.name === toolName);
+            if (tool) {
+                showToolDetail(tool);
+            }
+        }
+    });
+
+    // LLM Feature: Generate AI Idea
+    generateAiIdeaBtn.addEventListener('click', async () => {
+        aiIdeaOutput.classList.add('hidden');
+        aiIdeaError.classList.add('hidden');
+        generateAiIdeaBtn.disabled = true;
+        generateAiIdeaText.classList.add('hidden');
+        generateAiIdeaSpinner.classList.remove('hidden');
+
+        const department = aiIdeaDepartmentSelect.value;
+        const promptText = aiIdeaPromptInput.value;
+
+        let userPrompt = "Tạo một ý tưởng công cụ AI mới cho ngành game.";
+        if (department) {
+            userPrompt += ` Tập trung vào lĩnh vực "${department}".`;
+        }
+        if (promptText) {
+            userPrompt += ` Ý tưởng cần liên quan đến: "${promptText}".`;
+        }
+        userPrompt += ` Cung cấp tên công cụ (tiếng Việt), mô tả ngắn gọn (tiếng Việt) và lĩnh vực đề xuất (tiếng Việt) dưới dạng JSON.`;
+
+        const payload = {
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        "toolName": { "type": "STRING" },
+                        "toolDescription": { "type": "STRING" },
+                        "suggestedCategory": { "type": "STRING" }
+                    },
+                    "propertyOrdering": ["toolName", "toolDescription", "suggestedCategory"]
+                }
+            }
+        };
+
+        const apiKey = ""; // Canvas will automatically provide it in runtime
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                const json = result.candidates[0].content.parts[0].text;
+                const parsedJson = JSON.parse(json);
+
+                generatedToolName.textContent = parsedJson.toolName || 'N/A';
+                generatedToolDescription.textContent = parsedJson.toolDescription || 'N/A';
+                generatedToolCategory.textContent = parsedJson.suggestedCategory || 'N/A';
+                aiIdeaOutput.classList.remove('hidden');
+            } else {
+                aiIdeaErrorMessage.textContent = 'Không thể tạo ý tưởng AI. Vui lòng thử lại.';
+                aiIdeaError.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Lỗi khi gọi Gemini API:', error);
+            aiIdeaErrorMessage.textContent = 'Đã xảy ra lỗi khi kết nối với AI. Vui lòng thử lại sau.';
+            aiIdeaError.classList.remove('hidden');
+        } finally {
+            generateAiIdeaBtn.disabled = false;
+            generateAiIdeaText.classList.remove('hidden');
+            generateAiIdeaSpinner.classList.add('hidden');
+        }
+    });
+
+    renderTools();
+    activateNavLink();
+
+    // Add new chat functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-message');
+        const sendText = document.getElementById('send-text');
+        const sendSpinner = document.getElementById('send-spinner');
+
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `max-w-[80%] rounded-lg p-3 ${isUser ? 'bg-teal-600 text-white' : 'bg-white border border-stone-200'}`;
+            messageBubble.textContent = text;
+            
+            messageDiv.appendChild(messageBubble);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Disable input and show loading state
+            chatInput.value = '';
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            sendText.classList.add('hidden');
+            sendSpinner.classList.remove('hidden');
+
+            // Add user message
+            addMessage(message, true);
+
+            try {
+                // Call Gemini API (implementation will depend on your setup)
+                const response = await fetch('YOUR_GEMINI_API_ENDPOINT', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                
+                const data = await response.json();
+                addMessage(data.response);
+            } catch (error) {
+                addMessage('Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.');
+            } finally {
+                // Re-enable input and hide loading state
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                sendText.classList.remove('hidden');
+                sendSpinner.classList.add('hidden');
+                chatInput.focus();
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Add initial message
+        addMessage('Xin chào! Tôi là Gemini, tôi có thể giúp gì cho bạn về AI trong ngành game?');
+    });
+
+    // Thêm mảng API keys
+    const apiKeys = [
+        'AIzaSyC4vM-9HVSTP8b5bk4VRXckprTGLjHrRSE',
+        'AIzaSyDEU7avO0BHL46_7Md9vOSt8GE4v0SFJYs',
+        'AIzaSyC1ds5B46W57F3heIlLglFOdHc9CSz6drs',
+        'AIzaSyAqbfESjQs1Pk7rMu8oKN9HzVP7cPSvWu4',
+        'AIzaSyCGmlDQ_hOV5YHwTHwKJ8X9Zvc3f7ovR-M',
+        'AIzaSyBnOsV4e0yN1R2ys93xF2uq7BS8q2SrAPo',
+        'AIzaSyBeoL89ynDmqMD02PkVwfTlK_XU-Slm2fo',
+        'AIzaSyArGjrgkeLUViOiUDLlqGhqqubHoccNKiM',
+        'AIzaSyDSqKhDTxlxswZRkmnxXLmBe2XWa4NKdPs',
+        'AIzaSyAwivsJDYrauIiniV-D6ngvZU1inkZhjGU'
+    ];
+
+    let currentKeyIndex = 0;
+
+    // Hàm để lấy API key tiếp theo
+    function getNextApiKey() {
+        currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+        return apiKeys[currentKeyIndex];
+    }
+
+    // Khởi tạo chatbot
+    document.addEventListener('DOMContentLoaded', () => {
+        const chatToggle = document.getElementById('chat-toggle');
+        const chatWindow = document.getElementById('chat-window');
+        const chatMessages = document.getElementById('floating-chat-messages');
+        const chatInput = document.getElementById('floating-chat-input');
+        const sendButton = document.getElementById('floating-chat-send');
+
+        // Toggle chat window
+        chatToggle.addEventListener('click', () => {
+            chatWindow.classList.toggle('active');
+        });
+
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`;
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `max-w-[80%] rounded-lg p-3 ${isUser ? 'bg-teal-600 text-white' : 'bg-gray-100'}`;
+            messageBubble.textContent = text;
+            
+            messageDiv.appendChild(messageBubble);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Thêm tin nhắn người dùng
+            addMessage(message, true);
+            chatInput.value = '';
+
+            // Thêm loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'flex justify-start mb-4';
+            loadingDiv.innerHTML = '<div class="max-w-[80%] rounded-lg p-3 bg-gray-100">Đang xử lý...</div>';
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                let response = null;
+                let retryCount = 0;
+                const maxRetries = apiKeys.length;
+
+                while (retryCount < maxRetries && !response?.ok) {
+                    const currentKey = apiKeys[currentKeyIndex];
+                    try {
+                        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${currentKey}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [{
+                                        text: message
+                                    }]
+                                }]
+                            })
+                        });
+
+                        if (!response.ok) {
+                            console.log(`API key ${currentKey} failed with status ${response.status}`);
+                            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+                            retryCount++;
+                            continue;
+                        }
+
+                        const data = await response.json();
+                        // Xóa loading message
+                        chatMessages.removeChild(loadingDiv);
+                        
+                        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                            const aiResponse = data.candidates[0].content.parts[0].text;
+                            addMessage(aiResponse);
+                        } else {
+                            throw new Error('Invalid response format');
+                        }
+                        break;
+
+                    } catch (error) {
+                        console.error('Error with API key:', currentKey, error);
+                        currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+                        retryCount++;
+                    }
+                }
+
+                if (retryCount >= maxRetries) {
+                    // Xóa loading message
+                    chatMessages.removeChild(loadingDiv);
+                    addMessage('Xin lỗi, tất cả các API key hiện không khả dụng. Vui lòng thử lại sau.');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                // Xóa loading message
+                chatMessages.removeChild(loadingDiv);
+                addMessage('Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.');
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Add initial message
+        addMessage('Xin chào! Tôi là AI Assistant. Tôi có thể giúp gì cho bạn?');
+    });
+});
+</script>
+
+</body>
+</html>
